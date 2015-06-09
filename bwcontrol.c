@@ -6,7 +6,7 @@
         make
         LD_PRELOAD=./bwcontrol.so BW_LIMIT=80 BW_TIMEOUT=100  hping3 -1 8.8.8.8  --fast
 
-        this hping has been limited his max speed to 80 bytes per second.
+        this hping has been limited his max speed to 80 bytes per second, and in 100 seconds will be finished.
 */
 
 #include <dlfcn.h>
