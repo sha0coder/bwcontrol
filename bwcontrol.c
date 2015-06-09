@@ -43,6 +43,8 @@ void __attribute__ ((constructor)) init(void) {
         usage();
 
     bw_global_timeout = time(NULL) + atoi(getenv("BW_TIMEOUT"));
+    bw_limit = atoi(getenv("BW_LIMIT"));
+    bw_time = time(NULL);
 
 
     __libc_sendto = dlsym(libc, "sendto");
@@ -77,52 +79,46 @@ int bw_timeout() {
 }
 
 int bw_mustDrop() {
+    int mustDrop = 0;
 
-    if (bw_time == NULL) {
-        //printf("crono start\n");
-        bw_limit = atoi(getenv("BW_LIMIT"));
-        bw_time = time(NULL);
-
-    } else {
-        if (bw_end_timeout()) {
-            printf("BW_TIMEOUT reached!!\n");
-            exit(1);
-        }
-
-        if (bw_timeout()) {
-            //printf("timeout\n");
-            bw_time = time(NULL);
-            bw_bytes = 0;
-
-        } else {
-            if (bw_bytes >= bw_limit) {
-                printf("%d bytes sent, Blocked\n",bw_bytes);
-                return 1;
-            } /*else {
-                printf("limit not reached\n");
-            }*/
-        }
+    if (bw_end_timeout()) {
+        printf("BW_TIMEOUT reached!!\n");
+        exit(1);
     }
 
-    return 0;
+    if (bw_bytes >= bw_limit) {
+        printf("%d bytes, Blocked\n",bw_bytes);
+        mustDrop = 1;
+    } else 
+        printf("%d bytes, send\n", bw_bytes);
+
+    if (bw_timeout()) {
+        bw_time = time(NULL);
+        bw_bytes = 0;
+    } 
+
+    return mustDrop;
 }
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
                       const struct sockaddr *dest_addr, socklen_t addrlen) {
 
+    bw_bytes += len;
+
     if (bw_mustDrop())
         return 0;
 
-    bw_bytes += len;
     printf("bytes sent: %d\n",bw_bytes);
     return __libc_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+    bw_bytes += len;
+
     if (bw_mustDrop())
         return 0;
 
-    bw_bytes += len;
+    
     printf("bytes sent: %d\n",bw_bytes);
     return __libc_send(sockfd, buf, len, flags);
 }
