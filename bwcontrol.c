@@ -20,6 +20,7 @@
 
 static ssize_t (*__libc_sendto)(int , const void *, size_t, int, const struct sockaddr *, socklen_t);
 static ssize_t (*__libc_send)(int, const void*, size_t, int);
+static ssize_t (*__libc_sendmsg)(int , const struct msghdr *, int);
 
 static void *libc = NULL;
 static int bw_bytes = 0;
@@ -46,9 +47,9 @@ void __attribute__ ((constructor)) init(void) {
     bw_limit = atoi(getenv("BW_LIMIT"));
     bw_time = time(NULL);
 
-
-    __libc_sendto = dlsym(libc, "sendto");
     __libc_send = dlsym(libc, "send");
+    __libc_sendto = dlsym(libc, "sendto");
+    __libc_sendmsg = dlsym(libc, "sendmsg");
 
     printf("BW Control loaded.\n");
 
@@ -86,7 +87,7 @@ int bw_mustDrop() {
         exit(1);
     }
 
-    if (bw_bytes >= bw_limit) {
+    if (bw_bytes > bw_limit) {
         printf("%d bytes, Blocked\n",bw_bytes);
         mustDrop = 1;
     } else 
@@ -98,6 +99,19 @@ int bw_mustDrop() {
     } 
 
     return mustDrop;
+}
+
+
+
+ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+    bw_bytes += len;
+
+    if (bw_mustDrop())
+        return 0;
+
+    
+    printf("bytes sent: %d\n",bw_bytes);
+    return __libc_send(sockfd, buf, len, flags);
 }
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
@@ -112,13 +126,17 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
     return __libc_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 
-ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
+    int len = 0;
+    for (int i=0; i<msg->msg_iovlen; i++)
+        len += msg->msg_iov[i].iov_len;
+
     bw_bytes += len;
 
     if (bw_mustDrop())
         return 0;
 
-    
-    printf("bytes sent: %d\n",bw_bytes);
-    return __libc_send(sockfd, buf, len, flags);
+    printf("bytes sent: %d\n", bw_bytes);
+
+    return __libc_sendmsg(sockfd, msg, flags);
 }
