@@ -25,6 +25,8 @@ static void *libc = NULL;
 static int bw_bytes = 0;
 static time_t bw_time = NULL;
 static int bw_limit = 0;
+static time_t bw_init_time = NULL;
+static unsigned int bw_global_timeout = 0;
 
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
@@ -37,10 +39,14 @@ void __attribute__ ((constructor)) init(void) {
         printf("crash\n");
     */
 
+    if (getenv("BW_LIMIT") == NULL || getenv("BW_TIMEOUT") == NULL)
+            usage();
+
+    bw_global_timeout = time(NULL) + atoi(getenv("BW_TIMEOUT"));
+
     __libc_sendto = dlsym(libc, "sendto");
     __libc_send = dlsym(libc, "send");
 
-    
 
     printf("BW Control loaded.\n");
 
@@ -53,6 +59,18 @@ void __attribute__ ((destructor)) fini(void) {
     //dlclose(libc);
 }
 
+void usage() {
+    printf("example of usage:\n");
+    printf("LD_PRELOAD=./bwcontrol.so BW_LIMIT=10 BW_TIMEOUT=100  ./tool\n");
+    printf("  this launches tool during 100 seconds, then finishes the execution.\n");
+    printf("  the speed is limited to 100 bytes per second\n");
+    exit(1);
+}
+
+
+int bw_end_timeout() {
+    return (time(NULL) >= bw_global_timeout);
+}
 
 int bw_timeout() {
     return ((time(NULL)-bw_time) >= 1);
@@ -66,6 +84,10 @@ int bw_mustDrop() {
         bw_time = time(NULL);
 
     } else {
+        if (bw_end_timeout()) {
+            printf("BW_TIMEOUT reached!!\n");
+            exit(1);
+        }
 
         if (bw_timeout()) {
             //printf("timeout\n");
