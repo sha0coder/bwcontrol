@@ -4,7 +4,7 @@
 
     USAGE:
         make
-        LD_PRELOAD=./bwcontrol.so BW_LIMIT=80 hping3 -1 8.8.8.8  --fast
+        LD_PRELOAD=./bwcontrol.so BW_LIMIT=80 BW_TIMEOUT=100  hping3 -1 8.8.8.8  --fast
 
         this hping has been limited his max speed to 80 bytes per second.
 */
