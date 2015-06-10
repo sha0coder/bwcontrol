@@ -16,11 +16,15 @@
 #include <sys/socket.h>
 #include <time.h>
 
+#include <linux/futex.h>
+#include <sys/time.h>
+
 #define _GNU_SOURCE 
 
 static ssize_t (*__libc_sendto)(int , const void *, size_t, int, const struct sockaddr *, socklen_t);
 static ssize_t (*__libc_send)(int, const void*, size_t, int);
 static ssize_t (*__libc_sendmsg)(int , const struct msghdr *, int);
+static int (*__libc_futex) (int *, int, int, const struct timespec *, int *, int);
 
 static void *libc = NULL;
 static int bw_bytes = 0;
@@ -67,6 +71,7 @@ void __attribute__ ((constructor)) init(void) {
     __libc_send = dlsym(libc, "send");
     __libc_sendto = dlsym(libc, "sendto");
     __libc_sendmsg = dlsym(libc, "sendmsg");
+    __libc_futex = dlsym(libc, "futex");
 
     printf("BW Control loaded.\n");
 }
@@ -154,4 +159,9 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
 
     printf("sending %d bytes\n", len);
     return __libc_sendmsg(sockfd, msg, flags);
+}
+
+
+int futex (int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val3) {
+    return 0
 }
