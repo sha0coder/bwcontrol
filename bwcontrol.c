@@ -26,7 +26,7 @@ static ssize_t (*__libc_send)(int, const void*, size_t, int);
 static ssize_t (*__libc_sendmsg)(int , const struct msghdr *, int);
 
 static void *libc = NULL;
-static int bw_bytes = 0;
+static float bw_bytes = 0;
 static time_t bw_time = NULL;
 static float bw_limit = 0;
 static unsigned int bw_global_timeout = 0;
@@ -121,7 +121,7 @@ int bw_mustDrop() {
 }
 
 
-/*
+
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     bw_bytes += len;
@@ -165,6 +165,3 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     return __libc_sendmsg(sockfd, msg, flags);
 }
 
-
-
-*/
