@@ -109,8 +109,7 @@ int bw_mustDrop() {
     if (bw_bytes > bw_limit) {
         printf("%d bytes, Blocked\n",bw_bytes);
         mustDrop = 1;
-    } else 
-        printf("%d bytes, send\n", bw_bytes);
+    } 
 
     if (bw_timeout()) {
         bw_time = time(NULL);
