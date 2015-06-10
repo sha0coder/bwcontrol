@@ -24,7 +24,6 @@
 static ssize_t (*__libc_sendto)(int , const void *, size_t, int, const struct sockaddr *, socklen_t);
 static ssize_t (*__libc_send)(int, const void*, size_t, int);
 static ssize_t (*__libc_sendmsg)(int , const struct msghdr *, int);
-static int (*__libc_futex) (int *, int, int, const struct timespec *, int *, int);
 
 static void *libc = NULL;
 static int bw_bytes = 0;
@@ -71,7 +70,6 @@ void __attribute__ ((constructor)) init(void) {
     __libc_send = dlsym(libc, "send");
     __libc_sendto = dlsym(libc, "sendto");
     __libc_sendmsg = dlsym(libc, "sendmsg");
-    __libc_futex = dlsym(libc, "futex");
 
     printf("BW Control loaded.\n");
 }
@@ -127,8 +125,10 @@ int bw_mustDrop() {
 ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
     bw_bytes += len;
 
-    if (bw_mustDrop())
+    if (bw_mustDrop()) {
+        __libc_send(sockfd, buf, 0, flags);
         return len;
+    }
 
     
     printf("bytes sent: %d\n",len);
@@ -140,8 +140,11 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
 
     bw_bytes += len;
 
-    if (bw_mustDrop())
+
+    if (bw_mustDrop()) {
+        __libc_sendto(sockfd,buf,0,flags,dest_addr,addrlen);
         return len;
+    }
 
     printf("bytes sent: %d\n",len);
     return __libc_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
@@ -154,14 +157,11 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
 
     bw_bytes += len;
 
-    if (bw_mustDrop())
+    if (bw_mustDrop()) {
         return len;
+    }
 
     printf("sending %d bytes\n", len);
     return __libc_sendmsg(sockfd, msg, flags);
 }
 
-
-int futex (int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val3) {
-    return 0
-}
