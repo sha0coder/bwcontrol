@@ -80,7 +80,7 @@ void __attribute__ ((destructor)) fini(void) {
 
 void usage() {
     printf("example of usage:\n");
-    printf("LD_PRELOAD=./bwcontrol.so BW_LIMIT=10 BW_TIMEOUT=100  ./tool\n");
+    printf("LD_PRELOAD=./bwcontrol.so BW_LIMIT=b10 BW_TIMEOUT=100  ./tool\n");
     printf("  this launches tool during 100 seconds, then finishes the execution.\n");
     printf("  the speed is limited to 100 bytes per second\n");
     exit(1);
@@ -126,7 +126,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
         return 0;
 
     
-    printf("bytes sent: %d\n",bw_bytes);
+    printf("bytes sent: %d\n",len);
     return __libc_send(sockfd, buf, len, flags);
 }
 
@@ -138,7 +138,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
     if (bw_mustDrop())
         return 0;
 
-    printf("bytes sent: %d\n",bw_bytes);
+    printf("bytes sent: %d\n",len);
     return __libc_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 
@@ -152,7 +152,6 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     if (bw_mustDrop())
         return 0;
 
-    printf("bytes sent: %d\n", bw_bytes);
-
+    printf("sending %d bytes\n", len);
     return __libc_sendmsg(sockfd, msg, flags);
 }
