@@ -4,7 +4,7 @@
 
     USAGE:
         make
-        LD_PRELOAD=./bwcontrol.so BW_LIMIT=b80 BW_TIMEOUT=100  hping3 -1 8.8.8.8  --fast
+        LD_PRELOAD=./bwcontrol.so BW_LIMIT=m1 BW_TIMEOUT=100  hping3 -1 8.8.8.8  --fast
 
         this hping has been limited his max speed to 80 bytes per second, and in 100 seconds will be finished.
 */
@@ -57,12 +57,12 @@ void __attribute__ ((constructor)) init(void) {
 
     
     switch (precission) {
+	case 'B':
+	case 'b': bw_limit/=8; break;
         case 'K':
-        case 'k': bw_limit *= 1024; break;
+        case 'k': bw_limit = bw_limit*1000/8; break;
         case 'M':
-        case 'm': bw_limit *= 1024*1024; break;
-        case 'G':
-        case 'g': bw_limit *= 1024*1024*1024; break;
+        case 'm': bw_limit = bw_limit*1000000/8; break;
     }
 
     printf("limit: %f bytes\n", bw_limit);
@@ -83,7 +83,7 @@ void __attribute__ ((destructor)) fini(void) {
 
 void usage() {
     printf("example of usage:\n");
-    printf("LD_PRELOAD=./bwcontrol.so BW_LIMIT=b10 BW_TIMEOUT=100  ./tool\n");
+    printf("LD_PRELOAD=./bwcontrol.so BW_LIMIT=m1 BW_TIMEOUT=100  ./tool\n");
     printf("  this launches tool during 100 seconds, then finishes the execution.\n");
     printf("  the speed is limited to 100 bytes per second\n");
     exit(1);
@@ -129,7 +129,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
         return len;
 
     
-    //printf("bytes sent: %d\n",len);
+    printf("bytes sent: %d\n",len);
     return __libc_send(sockfd, buf, len, flags);
 }
 
@@ -141,7 +141,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
     if (bw_mustDrop()) 
         return len;
 
-    //printf("bytes sent: %d\n",len);
+    printf("bytes sent: %d\n",len);
     return __libc_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 
@@ -155,7 +155,7 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     if (bw_mustDrop()) 
         return len;
 
-    //printf("sending %d bytes\n", len);
+    printf("sending %d bytes\n", len);
     return __libc_sendmsg(sockfd, msg, flags);
 }
 
