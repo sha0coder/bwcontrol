@@ -1,0 +1,24 @@
+== description ==
+
+bwcontrol is hook library to provide speed and time limits for network tools that doesnt
+implement this capabilities.
+
+Very useful for denial of service tests, where you have to control the maximun
+speed, or implement auto-stop at x seconds.
+
+The speed can be selected in mbps, kbps or mbps
+
+
+== build ==
+
+make
+
+== usage ==
+
+Run hping3 during 100 seconds limited to 1mbps 
+LD_PRELOAD=./bwcontrol.so BW_LIMIT=m1 BW_TIMEOUT=100  hping3 -1 <ip>  --fast
+
+
+
+
+
