@@ -1,7 +1,7 @@
 == description ==
 
-bwcontrol is hook library to provide speed and time limits for network tools that doesnt
-implement this capabilities.
+Control speed and limits on the tools that doesn't implement this capabilities.
+This works hooking any network tool to provide speed and time limits.
 
 Very useful for denial of service tests, where you have to control the maximun
 speed, or implement auto-stop at x seconds.
