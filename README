@@ -1,6 +1,6 @@
 == description ==
 
-Control speed and limits on the tools that doesn't implement this capabilities.
+Control speed and timeout on the tools that doesn't implement this capabilities.
 This works hooking any network tool to provide speed and time limits.
 
 Very useful for denial of service tests, where you have to control the maximun
